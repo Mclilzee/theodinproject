@@ -23,6 +23,7 @@ class Api::PointsController < ApplicationController
     value = params.fetch(:value, 1).to_i
 
     if user_points.increment_points_by(value)
+      user_points.update(active: true)
       render json: user_points
     else
       render json: { message: 'Unable to update points' }
