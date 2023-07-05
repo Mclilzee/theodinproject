@@ -42,7 +42,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     resources :lesson_completions, only: [:index]
-    resources :points, only: %i[index show create]
+    resources :points, only: %i[index show create update]
   end
 
   get 'home' => 'static_pages#home'
