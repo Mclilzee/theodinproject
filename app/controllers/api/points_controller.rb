@@ -30,6 +30,19 @@ class Api::PointsController < ApplicationController
     end
   end
 
+  def update
+    discord_ids = params[:discord_ids]
+
+    if discord_ids.present? && discord_ids.is_a?(Array)
+      users = Point.where(discord_id: discord_ids)
+      users.update_all(active: false)
+
+      render json: { message: 'Users updated successfully' }
+    else
+      render json: { message: 'Invalid of missing Discord IDs' }
+    end
+  end
+
   private
 
   def authenticate
