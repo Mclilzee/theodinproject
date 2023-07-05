@@ -205,6 +205,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_08_05_091337) do
   create_table "points", force: :cascade do |t|
     t.string "discord_id", null: false
     t.integer "points", default: 0, null: false
+    t.boolean "active", default: true, null: false
     t.index ["discord_id"], name: "index_points_on_discord_id", unique: true
   end
 
