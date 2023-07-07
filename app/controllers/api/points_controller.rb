@@ -39,7 +39,7 @@ class Api::PointsController < ApplicationController
 
       render json: { message: 'Users updated successfully' }
     else
-      render json: { message: 'Invalid of missing Discord IDs' }
+      render json: { message: 'Invalid or missing Discord IDs' }
     end
   end
 
