@@ -31,13 +31,15 @@ class Api::PointsController < ApplicationController
   end
 
   def update
-    discord_ids = params[:discord_ids]
+    inactive_discord_ids = params[:inactive_discord_ids]
+    active_discord_ids = params[:active_discord_ids]
 
-    if discord_ids.present? && discord_ids.is_a?(Array)
-      users = Point.where(discord_id: discord_ids)
-      users.update_all(active: false)
-
-      render json: { message: 'Users updated successfully' }
+    if inactive_discord_ids.present? && inactive_discord_ids.is_a?(Array)
+      users = Point.where(discord_id: inactive_discord_ids).update_all(active: false)
+      render json: { message: 'Users updated Successfully' }
+    elsif active_discord_ids.present? && active_discord_ids.is_a?(Array)
+      users = Point.where.not(discord_id: active_discord_ids).update_all(active: false)
+      render json: {message: 'Users Updated Successfully'}
     else
       render json: { message: 'Invalid or missing Discord IDs' }
     end
