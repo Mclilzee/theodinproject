@@ -17,6 +17,8 @@ class Api::PointsController < ApplicationController
 ||||||| parent of 1ed6be59 (Update show response to include user ranking)
     if user_points.present?
       render json: user_points
+||||||| parent of 2ea370b0 (Fix query selection to only return one user object)
+      render json: user
     else
       render json: { message: 'Unable to find that user' }
     end
