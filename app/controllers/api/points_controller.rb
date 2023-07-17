@@ -7,11 +7,11 @@ class Api::PointsController < ApplicationController
   end
 
   def show
-    sql_query = 'SELECT *, rank FROM (SELECT *, RANK() OVER (ORDER BY points DESC, id) FROM points) AS rank WHERE discord_id = ?'
+    sql_query = 'SELECT *, rank FROM (SELECT *, RANK() OVER (ORDER BY points DESC, id) FROM points) AS rank WHERE discord_id = ? LIMIT 1;'
     user = Point.find_by_sql([sql_query, params[:id]])
 
     if user.present?
-      render json: user
+      render json: user.first
     else
       render json: { message: 'Unable to find that user' }
     end
