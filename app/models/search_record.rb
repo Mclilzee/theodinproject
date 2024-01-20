@@ -3,4 +3,5 @@ class SearchRecord < ApplicationRecord
 
   validates :title, presence: true
   validates :url, presence: true
+  validates :path, presence: true
 end
