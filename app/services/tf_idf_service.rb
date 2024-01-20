@@ -40,17 +40,14 @@ class TfIdfService
   end
 
   def tf_idf_list
-    tf_idf_list = []
-    @tf_table.each do |url, record|
-      tf_idf = []
-      record[:tf_map].each_key do |word|
-        tf_idf_score = calculate_tf_idf_score(url, word)
-        tf_idf << { word:, tf_idf: tf_idf_score }
+    @tf_table.map do |url, record|
+      tf_idf = record[:tf_map].map do |word, _|
+        score = calculate_tf_idf_score(url, word)
+        { word:, score: }
       end
 
-      tf_idf_list << { url:, title: record[:title], tf_idf: }
+      { url:, title: record[:title], tf_idf: }
     end
-    tf_idf_list
   end
 
   def calculate_tf_idf_score(url, word)
