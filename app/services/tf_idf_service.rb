@@ -18,16 +18,16 @@ class TfIdfService
             ])
   end
 
-  def populate_table(url, title, text)
+  def populate_table(url, title, path, text)
     unless @tf_table.key?(url) && @tf_table[url].key?(title)
       @total_documents += 1
-      tokenize(url, title, text)
+      tokenize(url, title, path, text)
     end
   end
 
-  def tokenize(url, title, text)
+  def tokenize(url, title, path, text)
     tf_map = Hash.new(0)
-    words = text.scan(/\b\w+\b/)
+    words = "#{title} #{path} #{text}".scan(/\b\w+\b/)
     words.each do |word|
       next if @stop_words.include?(word)
 
