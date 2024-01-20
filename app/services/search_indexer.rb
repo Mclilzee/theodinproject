@@ -18,11 +18,11 @@ class SearchIndexer
   end
 
   def populate_database
-    tf_idf_list = @tf_idf.tf_idf_list
-    progressbar = ProgressBar.create total: tf_idf_list.length, format: '%t: |%w%i| Completed: %c %a %e'
-    tf_idf_list.each do |list|
-      search_record = SearchRecord.find_or_create_by(url: list[:url], title: list[:title], path: 'external')
-      bulk_records = list[:tf_idf].map do |word, score|
+    list = @tf_idf.list
+    progressbar = ProgressBar.create total: list.length, format: '%t: |%w%i| Completed: %c %a %e'
+    list.each do |record|
+      search_record = SearchRecord.find_or_create_by(url: record[:url], title: record[:title], path: 'external')
+      bulk_records = record[:tf_idf].map do |word, score|
         { search_record_id: search_record.id, word:, score: }
       end
       TfIdf.upsert_all(bulk_records, unique_by: %i[search_record_id word])

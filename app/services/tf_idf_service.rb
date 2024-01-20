@@ -39,11 +39,11 @@ class TfIdfService
     @tf_table[url] = { title:, tf_map: }
   end
 
-  def tf_idf_list
+  def list
     @tf_table.map do |url, record|
       tf_idf = record[:tf_map].map do |word, _|
         score = calculate_tf_idf_score(url, word)
-        { word:, score: }
+        [word, score]
       end
 
       { url:, title: record[:title], tf_idf: }
