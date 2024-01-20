@@ -11,7 +11,7 @@ class SearchIndexer
   def index_frequencies
     Lesson.find_each do |lesson|
       record = parse_lesson(lesson)
-      @tf_idf.populate_table(record[:url], record[:title], record[:text])
+      @tf_idf.populate_table(record)
     end
 
     populate_database
@@ -21,7 +21,7 @@ class SearchIndexer
     list = @tf_idf.list
     progressbar = ProgressBar.create total: list.length, format: '%t: |%w%i| Completed: %c %a %e'
     list.each do |record|
-      search_record = SearchRecord.find_or_create_by(url: record[:url], title: record[:title], path: 'external')
+      search_record = SearchRecord.find_or_create_by(url: record[:url], title: record[:title], path: record[:path])
       bulk_records = record[:tf_idf].map do |word, score|
         { search_record_id: search_record.id, word:, score: }
       end
@@ -39,7 +39,7 @@ class SearchIndexer
       @external_links[url: href] = link.text
     end
 
-    { url: "https://www.theodinproject.com/lessons/#{lesson.slug}", title: lesson.title, text: doc.text }
+    { url: "https://www.theodinproject.com/lessons/#{lesson.slug}", title: lesson.title, path: lesson.path.slug, text: doc.text }
   end
 
   def parse_external_links

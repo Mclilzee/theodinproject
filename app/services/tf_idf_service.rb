@@ -18,10 +18,10 @@ class TfIdfService
             ])
   end
 
-  def populate_table(url, title, path, text)
-    unless @tf_table.key?(url) && @tf_table[url].key?(title)
+  def populate_table(record)
+    unless @tf_table.key?(record[:url])
       @total_documents += 1
-      tokenize(url, title, path, text)
+      tokenize(record[:url], record[:title], record[:path], record[:text])
     end
   end
 
@@ -36,7 +36,7 @@ class TfIdfService
       @df_table[word] += 1 if tf_map[word] == 1
     end
 
-    @tf_table[url] = { title:, tf_map: }
+    @tf_table[url] = { title:, path:, tf_map: }
   end
 
   def list
@@ -46,7 +46,7 @@ class TfIdfService
         [word, score]
       end
 
-      { url:, title: record[:title], tf_idf: }
+      { url:, title: record[:title], path: record[:path], tf_idf: }
     end
   end
 
