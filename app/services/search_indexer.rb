@@ -31,11 +31,11 @@ class SearchIndexer
   end
 
   def save_bulk(record, search_record_id)
-    bulk_records = record[:tf_idf].map do |word, score|
+    bulk_records = record[:tf_idf].filter_map do |word, score|
       next if word.length > 20
 
       { search_record_id:, word:, score: }
-    end.compact
+    end
     TfIdf.upsert_all(bulk_records, unique_by: %i[search_record_id word])
   end
 
@@ -53,16 +53,26 @@ class SearchIndexer
 
   def parse_external_links
     progressbar = ProgressBar.create total: @external_links.length, format: '%t: |%w%i| Crawling Completed: %c %a %e'
+    thread_pool = Concurrent::FixedThreadPool.new(8)
     @external_links.each do |url, title|
-      progressbar.increment
-      uri = URI.parse(url)
-      response = Net::HTTP.get_response(uri)
-      next unless response.is_a?(Net::HTTPSuccess)
-
-      @tf_idf.populate_table({ url:, title:, path: 'external', text: Nokogiri::HTML5.parse(response.body).text })
-    rescue StandardError => _e
-      puts "Error: #{url}"
+      thread_pool.post(url, title) do |thread_url, thread_title|
+        parse_url(thread_url, thread_title)
+        progressbar.increment
+      end
     end
+    thread_pool.shutdown
+    thread_pool.wait_for_termination
+  end
+
+  def parse_url(url, title)
+    uri = URI.parse(url)
+    response = Net::HTTP.get_response(uri)
+    return unless response.is_a?(Net::HTTPSuccess)
+
+    text = Nokogiri::HTML5.parse(response.body).text
+    @tf_idf.populate_table({ url:, title:, text: })
+  rescue StandardError => e
+    Rails.logger.error(e)
   end
 
   def valid_link(url)
