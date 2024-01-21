@@ -6,9 +6,9 @@ class SearchIndexer
   end
 
   def index_frequencies
-    Lesson.each do |lesson|
+    Lesson.find_each do |lesson|
       records = parse_lesson(lesson)
-      @tf_idf.populate_table(lesson.id, records)
+      # @tf_idf.populate_table(lesson.id, records)
     end
 
     # save_to_database
@@ -29,12 +29,12 @@ class SearchIndexer
 
   def parse_lesson(lesson)
     doc = Nokogiri::HTML5.parse(lesson.body)
-    doc.xpath('//section').map do |section|
+    doc.css('section:not(#content)').map do |section|
       anchor = section.at('h3 a')
       slug = anchor['href']
       title = anchor.text
 
-      { slug:, title:, text: section.text }
+      { slug:, title:, text: section.text + lesson.description }
     end
   end
 end
