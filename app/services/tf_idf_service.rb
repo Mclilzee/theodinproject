@@ -3,12 +3,11 @@ class TfIdfService
     @stop_words = stop_words
     @df_table = Hash.new(0)
     @tf_table = {}
-    @total_documents = 0
   end
 
   def stop_words
     Set.new(%w[
-              a an and are as at be by for from has he in is it its of on that the to was were will with I you your
+              a how an and are as at be by for from has he in is it its of on that the to was were will with I you your
               yours him his she her hers they them their theirs we us our ours this these those who whom whose what
               which where when why how am being been do does did have had having me my mine myself yourself yourselves
               himself herself itself themselves ourselves but or nor so yet up down over under above below between among
@@ -19,15 +18,13 @@ class TfIdfService
   end
 
   def populate_table(record)
-    unless @tf_table.key?(record[:url])
-      @total_documents += 1
-      tokenize(record[:url], record[:title], record[:path], record[:text])
-    end
+    @total_documents += 1
+    tokenize(record)
   end
 
-  def tokenize(url, title, path, text)
+  def tokenize(record)
     tf_map = Hash.new(0)
-    words = "#{title} #{path} #{text}".scan(/\b\w+\b/)
+    words = "#{title} #{desc} #{text}".scan(/\b\w+\b/)
     words.each do |word|
       next if @stop_words.include?(word)
 
@@ -36,7 +33,7 @@ class TfIdfService
       @df_table[word] += 1 if tf_map[word] == 1
     end
 
-    @tf_table[url] = { title:, path:, tf_map: }
+    @tf_table[record[:id]] = { slug: record[:slug], tf_map: }
   end
 
   def list

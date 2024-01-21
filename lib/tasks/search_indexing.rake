@@ -4,14 +4,6 @@ namespace :search do
     Rails.logger.info 'Indexing content for searching...'
     tf_idf = TfIdfService.new
     search_indexer = SearchIndexer.new(tf_idf)
-    search_indexer.index_frequencies(crawl: false)
-  end
-
-  desc 'Index documents including crawling the links'
-  task crawl: :environment do
-    Rails.logger.info 'Indexing content for searching...'
-    tf_idf = TfIdfService.new
-    search_indexer = SearchIndexer.new(tf_idf)
-    search_indexer.index_frequencies(crawl: true)
+    search_indexer.index_frequencies
   end
 end
