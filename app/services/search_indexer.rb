@@ -15,8 +15,7 @@ class SearchIndexer
     end
 
     if config[:crawl]
-      @external_links.each { |key, _value| pp key }
-      # parse_external_links
+      parse_external_links
     end
     populate_database
   end
