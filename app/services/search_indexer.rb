@@ -15,7 +15,8 @@ class SearchIndexer
     end
 
     if config[:crawl]
-      parse_external_links
+      @external_links.each { |key, _value| pp key }
+      # parse_external_links
     end
     populate_database
   end
@@ -25,11 +26,18 @@ class SearchIndexer
     progressbar = ProgressBar.create total: list.length, format: '%t: |%w%i| Saving Completed: %c %a %e'
     list.each do |record|
       search_record = SearchRecord.find_or_create_by(url: record[:url], title: record[:title], path: record[:path])
-      bulk_records = record[:tf_idf].map do |word, score|
-        { search_record_id: search_record.id, word:, score: }
-      end
-      TfIdf.upsert_all(bulk_records, unique_by: %i[search_record_id word])
+      save_bulk(record, search_record.id)
       progressbar.increment
+    end
+  end
+
+  def save_bulk(record, search_record_id)
+    batch_size = 1000
+    bulk_records = record[:tf_idf].map do |word, score|
+      { search_record_id:, word:, score: }
+    end
+    bulk_records.each_slice(batch_size) do |_batch|
+      TfIdf.upsert_all(bulk_records, unique_by: %i[search_record_id word])
     end
   end
 
@@ -46,12 +54,12 @@ class SearchIndexer
   def parse_external_links
     progressbar = ProgressBar.create total: @external_links.length, format: '%t: |%w%i| Crawling Completed: %c %a %e'
     valid_links.each do |url, title|
+      progressbar.increment
       uri = URI.parse(url)
       response = Net::HTTP.get_response(uri)
       next unless response.is_a?(Net::HTTPSuccess)
 
       @tf_idf.populate_table({ url:, title:, path: 'external', text: Nokogiri::HTML5.parse(response.body).text })
-      progressbar.increment
     rescue StandardError => _e
       puts "Error: #{url}"
     end
