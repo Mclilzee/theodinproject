@@ -31,13 +31,12 @@ class SearchIndexer
   end
 
   def save_bulk(record, search_record_id)
-    batch_size = 1000
     bulk_records = record[:tf_idf].map do |word, score|
+      next if word.length > 20
+
       { search_record_id:, word:, score: }
-    end
-    bulk_records.each_slice(batch_size) do |_batch|
-      TfIdf.upsert_all(bulk_records, unique_by: %i[search_record_id word])
-    end
+    end.compact
+    TfIdf.upsert_all(bulk_records, unique_by: %i[search_record_id word])
   end
 
   def parse_lesson(lesson)
