@@ -1,7 +1,6 @@
 class SearchRecord < ApplicationRecord
-  has_many :tf_idf, dependent: :destroy
+  belong_to :lesson
 
-  validates :title, presence: true
-  validates :url, presence: true
-  validates :path, presence: true
+  has_many :tf_idf, dependent: :destroy
+  validates :slug, presence: true
 end
