@@ -45,7 +45,9 @@ class SearchIndexer
     doc = Nokogiri::HTML5.parse(lesson.body)
     doc.css('a[href]').each do |link|
       href = link[:href]
-      @external_links[href] = link.text
+      if valid_link(link)
+        @external_links[href] = link.text
+      end
     end
 
     { url: "https://www.theodinproject.com/lessons/#{lesson.slug}", title: lesson.title, path: lesson.path.slug, text: doc.text }
@@ -53,7 +55,7 @@ class SearchIndexer
 
   def parse_external_links
     progressbar = ProgressBar.create total: @external_links.length, format: '%t: |%w%i| Crawling Completed: %c %a %e'
-    valid_links.each do |url, title|
+    @external_links.each do |url, title|
       progressbar.increment
       uri = URI.parse(url)
       response = Net::HTTP.get_response(uri)
@@ -65,9 +67,7 @@ class SearchIndexer
     end
   end
 
-  def valid_links
-    @external_links.select do |url|
-      url.start_with?('http')
-    end
+  def valid_link
+    url.start_with?('http') && !url.end_with?('.jpg', '.jpeg', '.png', '.gif', '.bmp')
   end
 end
