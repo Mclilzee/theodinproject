@@ -2,7 +2,7 @@ class TfIdfService
   def initialize
     @stop_words = stop_words
     @df_table = Hash.new(0)
-    @tf_table = {}
+    @tf_list = []
     @total_documents = 0
   end
 
@@ -19,11 +19,12 @@ class TfIdfService
   end
 
   def populate_table(lesson_id, records)
-    @total_documents += 1
-    records.each { |record| tokenize(lesson_id, record) }
+    @total_documents += records.length
+    sections = records.map { |record| tokenize(record) }
+    @tf_list << { lesson_id:, sections: }
   end
 
-  def tokenize(lesson_id, record)
+  def tokenize(record)
     tf_map = Hash.new(0)
     words = "#{record[:title]} #{record[:text]}".scan(/\b\w+\b/)
     words.each do |word|
@@ -33,26 +34,26 @@ class TfIdfService
       tf_map[word] += 1
       @df_table[word] += 1 if tf_map[word] == 1
     end
-
-    @tf_table[lesson_id] = { slug: record[:slug], tf_map: }
+    { slug: record[:slug], title: record[:title], tf_map: }
   end
 
   def list
-    @tf_table.map do |url, record|
-      tf_idf = record[:tf_map].map do |word, _|
-        score = calculate_tf_idf_score(url, word)
-        [word, score]
+    @tf_list.map do |record|
+      sections = record[:sections].map do |section|
+        calculate_tf_idf_section(section)
       end
-
-      { url:, title: record[:title], path: record[:path], tf_idf: }
+      { lesson_id: record[:lesson_id], sections: }
     end
   end
 
-  def calculate_tf_idf_score(url, word)
-    tf_table = @tf_table[url][:tf_map]
-    total_tf = tf_table.length
-    tf = tf_table[word]
-    df = @df_table[word]
-    ((tf.to_f / total_tf) * Math.log((1 + @total_documents.to_f) / (1 + df)))
+  def calculate_tf_idf_section(section)
+    table = section[:tf_map]
+    tf_idf = table.map do |word, tf|
+      df = @df_table[word]
+      score = ((tf.to_f / table.length) * Math.log((1 + @total_documents.to_f) / (1 + df)))
+      [word, score]
+    end
+
+    { slug: section[:slug], title: section[:title], tf_idf: }
   end
 end
