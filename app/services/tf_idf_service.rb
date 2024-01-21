@@ -27,9 +27,9 @@ class TfIdfService
 
   def tokenize(url, title, path, text)
     tf_map = Hash.new(0)
-    words = "#{title} #{path} #{text}".scan(/\b\w+\b/)
+    words = "#{title} #{path} #{text}".scan(/\b[a-zA-Z]+\b/)
     words.each do |word|
-      next if @stop_words.include?(word)
+      next if word.length > 20 || @stop_words.include?(word)
 
       word = word.downcase
       tf_map[word] += 1
@@ -40,8 +40,9 @@ class TfIdfService
   end
 
   def list
-    @tf_table.map do |url, record|
-      tf_idf = record[:tf_map].map do |word, _|
+    @tf_table.filter_map do |url, record|
+      tf_idf = record[:tf_map]
+      tf_idf = tf_idf.map do |word, _|
         score = calculate_tf_idf_score(url, word)
         [word, score]
       end

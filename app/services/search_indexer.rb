@@ -17,26 +17,31 @@ class SearchIndexer
     if config[:crawl]
       parse_external_links
     end
-    populate_database
+    save_database
   end
 
-  def populate_database
+  def save_database
     list = @tf_idf.list
     progressbar = ProgressBar.create total: list.length, format: '%t: |%w%i| Saving Completed: %c %a %e'
     list.each do |record|
+      next unless valid_record(record)
+
       search_record = SearchRecord.find_or_create_by(url: record[:url], title: record[:title], path: record[:path])
-      save_bulk(record, search_record.id)
+      save_bulk(record[:tf_idf], search_record.id)
       progressbar.increment
     end
   end
 
-  def save_bulk(record, search_record_id)
-    bulk_records = record[:tf_idf].filter_map do |word, score|
-      next if word.length > 20
-
+  def save_bulk(tf_idf, search_record_id)
+    bulk_records = tf_idf.map do |word, score|
       { search_record_id:, word:, score: }
     end
+
     TfIdf.upsert_all(bulk_records, unique_by: %i[search_record_id word])
+  end
+
+  def valid_record(record)
+    !record[:title].empty? && !record[:url].empty? && !record[:path].empty? && !record[:tf_idf].empty?
   end
 
   def parse_lesson(lesson)
@@ -53,7 +58,7 @@ class SearchIndexer
 
   def parse_external_links
     progressbar = ProgressBar.create total: @external_links.length, format: '%t: |%w%i| Crawling Completed: %c %a %e'
-    thread_pool = Concurrent::FixedThreadPool.new(8)
+    thread_pool = Concurrent::FixedThreadPool.new(16)
     @external_links.each do |url, title|
       thread_pool.post(url, title) do |thread_url, thread_title|
         parse_url(thread_url, thread_title)
@@ -70,7 +75,7 @@ class SearchIndexer
     return unless response.is_a?(Net::HTTPSuccess)
 
     text = Nokogiri::HTML5.parse(response.body).text
-    @tf_idf.populate_table({ url:, title:, text: })
+    @tf_idf.populate_table({ url:, title:, path: 'external', text: })
   rescue StandardError => e
     Rails.logger.error(e)
   end

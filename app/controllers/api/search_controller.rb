@@ -24,8 +24,6 @@ class Api::SearchController < ApplicationController
       'full-stack-ruby-on-rails'
     elsif query.intersect?(%w[foundation foundations])
       'foundations'
-    else
-      nill
     end
   end
 
