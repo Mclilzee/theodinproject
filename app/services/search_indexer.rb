@@ -6,25 +6,30 @@ class SearchIndexer
   end
 
   def index_frequencies
-    # Lesson.find_each do |lesson|
-    records = parse_lesson(Lesson.find(1))
-    @tf_idf.populate_table(1, records)
-    pp @tf_idf.list
-    # end
+    Lesson.find_each do |lesson|
+      records = parse_lesson(lesson)
+      @tf_idf.populate_table(lesson.id, records)
+    end
 
-    # save_to_database
+    save_to_database
   end
 
   def save_to_database
     list = @tf_idf.list
     progressbar = ProgressBar.create total: list.length, format: '%t: |%w%i| Saving Completed: %c %a %e'
     list.each do |table|
-      search_record = SearchRecord.find_or_create_by(url: table[:url], title: table[:title], path: table[:path])
-      bulk_records = table[:tf_idf].map do |word, score|
+      search_record(table[:lesson_id], table[:sections])
+      progressbar.increment
+    end
+  end
+
+  def search_record(lesson_id, sections)
+    sections.each do |section|
+      search_record = SearchRecord.find_or_create_by(lesson_id:, slug: section[:slug])
+      bulk_records = section[:tf_idf].map do |word, score|
         { search_record_id: search_record.id, word:, score: }
       end
       TfIdf.upsert_all(bulk_records, unique_by: %i[search_record_id word])
-      progressbar.increment
     end
   end
 
