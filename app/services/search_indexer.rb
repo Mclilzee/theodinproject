@@ -44,9 +44,9 @@ class SearchIndexer
   def parse_lesson(lesson)
     doc = Nokogiri::HTML5.parse(lesson.body)
     doc.css('a[href]').each do |link|
-      href = link[:href]
-      if valid_link(link)
-        @external_links[href] = link.text
+      url = link[:href]
+      if valid_link(url)
+        @external_links[url] = link.text
       end
     end
 
@@ -67,7 +67,7 @@ class SearchIndexer
     end
   end
 
-  def valid_link
+  def valid_link(url)
     url.start_with?('http') && !url.end_with?('.jpg', '.jpeg', '.png', '.gif', '.bmp')
   end
 end
